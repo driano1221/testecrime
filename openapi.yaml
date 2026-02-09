@@ -1,0 +1,390 @@
+openapi: "3.0.3"
+info:
+  title: SINESP-as-a-Service API
+  version: "1.0.0"
+  description: |
+    API REST que expõe dados e insights de segurança pública do Brasil
+    (SINESP VDE, 2015–2024) em JSON, com contrato estável.
+
+    **Fonte dos dados:** Sistema Nacional de Informações de Segurança Pública (SINESP),
+    plataforma integrada mantida pela Secretaria Nacional de Segurança Pública (SENASP)
+    do Ministério da Justiça e Segurança Pública.
+    https://www.gov.br/mj/pt-br/assuntos/sua-seguranca/seguranca-publica/sinesp-1
+
+    **Aviso:** Este serviço apenas facilita o acesso a dados oficiais públicos para
+    fins de pesquisa empírica. Não se trata de score de risco determinista.
+    Limitações conhecidas incluem subnotificação e mudanças metodológicas ao longo do tempo.
+  contact:
+    name: SINESP-as-a-Service
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+
+paths:
+  /status:
+    get:
+      operationId: getStatus
+      summary: Status e metadados do serviço
+      description: Retorna informações sobre o estado do serviço, freshness dos dados e cobertura.
+      tags: [Meta]
+      responses:
+        "200":
+          description: Status do serviço
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+
+  /v1/data:
+    get:
+      operationId: getData
+      summary: Consulta dados criminais
+      description: |
+        Retorna dados criminais filtrados por UF, município, ano, categoria e tipologia.
+        Leitura a partir do snapshot local (cache).
+      tags: [Data]
+      parameters:
+        - $ref: "#/components/parameters/state"
+        - $ref: "#/components/parameters/city"
+        - $ref: "#/components/parameters/year"
+        - $ref: "#/components/parameters/category"
+        - $ref: "#/components/parameters/typology"
+        - $ref: "#/components/parameters/granularity"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/per_page"
+      responses:
+        "200":
+          description: Dados filtrados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /v1/trend:
+    get:
+      operationId: getTrend
+      summary: Tendência e variação temporal
+      description: |
+        Calcula variação percentual 12 meses e 24 meses, direção da tendência
+        (subindo / descendo / estável) para a série filtrada.
+      tags: [Analytics]
+      parameters:
+        - $ref: "#/components/parameters/state"
+        - $ref: "#/components/parameters/city"
+        - $ref: "#/components/parameters/category"
+        - $ref: "#/components/parameters/typology"
+      responses:
+        "200":
+          description: Análise de tendência
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrendResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /v1/predict:
+    get:
+      operationId: getPredict
+      summary: Previsão (ARIMA automático)
+      description: |
+        Executa modelagem ARIMA automática e retorna previsões para h períodos à frente.
+        Utiliza internamente a função `br_crime_predict` do pacote BrazilCrime.
+      tags: [Analytics]
+      parameters:
+        - $ref: "#/components/parameters/state"
+        - $ref: "#/components/parameters/city"
+        - $ref: "#/components/parameters/category"
+        - $ref: "#/components/parameters/typology"
+        - name: h
+          in: query
+          description: Horizonte de previsão (número de períodos à frente)
+          schema:
+            type: integer
+            default: 12
+            minimum: 1
+            maximum: 60
+        - name: level
+          in: query
+          description: Nível de confiança do intervalo de previsão (%)
+          schema:
+            type: integer
+            default: 95
+            minimum: 50
+            maximum: 99
+      responses:
+        "200":
+          description: Previsão gerada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+components:
+  parameters:
+    state:
+      name: state
+      in: query
+      description: "Sigla da UF (ex: SP, RJ). Pode ser lista separada por vírgula."
+      schema:
+        type: string
+        default: "all"
+    city:
+      name: city
+      in: query
+      description: "Nome do município. Pode ser lista separada por vírgula."
+      schema:
+        type: string
+        default: "all"
+    year:
+      name: year
+      in: query
+      description: "Ano(s) (ex: 2020 ou 2020,2021,2022)."
+      schema:
+        type: string
+        default: "all"
+    category:
+      name: category
+      in: query
+      description: "Categoria do crime."
+      schema:
+        type: string
+        default: "all"
+    typology:
+      name: typology
+      in: query
+      description: "Tipologia do crime (ex: Furto de veículo)."
+      schema:
+        type: string
+        default: "all"
+    granularity:
+      name: granularity
+      in: query
+      description: "Granularidade temporal: month ou year."
+      schema:
+        type: string
+        default: "month"
+        enum: [month, year]
+    page:
+      name: page
+      in: query
+      description: Página para paginação.
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    per_page:
+      name: per_page
+      in: query
+      description: Registros por página.
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+
+  schemas:
+    StatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "ok"
+        snapshot_id:
+          type: string
+          example: "2025-09-01_abc123"
+        last_refresh:
+          type: string
+          format: date-time
+        coverage:
+          type: object
+          properties:
+            states:
+              type: array
+              items:
+                type: string
+            years:
+              type: array
+              items:
+                type: integer
+            categories:
+              type: array
+              items:
+                type: string
+            row_count:
+              type: integer
+        source:
+          type: string
+          example: "SINESP VDE — Ministério da Justiça e Segurança Pública"
+        notes:
+          type: string
+
+    DataResponse:
+      type: object
+      properties:
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CrimeRecord"
+
+    CrimeRecord:
+      type: object
+      properties:
+        state:
+          type: string
+        city:
+          type: string
+        year:
+          type: integer
+        month:
+          type: integer
+        category:
+          type: string
+        typology:
+          type: string
+        count:
+          type: number
+
+    TrendResponse:
+      type: object
+      properties:
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+        trend:
+          type: object
+          properties:
+            direction:
+              type: string
+              enum: [rising, falling, stable]
+            change_12m_pct:
+              type: number
+            change_24m_pct:
+              type: number
+            latest_period:
+              type: string
+            latest_value:
+              type: number
+            previous_12m_value:
+              type: number
+            previous_24m_value:
+              type: number
+
+    PredictResponse:
+      type: object
+      properties:
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+        model:
+          type: object
+          properties:
+            method:
+              type: string
+              example: "auto.arima"
+            order:
+              type: string
+              example: "ARIMA(1,1,1)"
+        forecast:
+          type: array
+          items:
+            type: object
+            properties:
+              period:
+                type: string
+              point:
+                type: number
+              lower:
+                type: number
+              upper:
+                type: number
+
+    ResponseMeta:
+      type: object
+      properties:
+        snapshot_id:
+          type: string
+        last_refresh:
+          type: string
+          format: date-time
+        source:
+          type: string
+          example: "SINESP VDE — Ministério da Justiça e Segurança Pública"
+        coverage:
+          type: string
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total_records:
+          type: integer
+        total_pages:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        status:
+          type: integer
+
+  responses:
+    BadRequest:
+      description: Parâmetros inválidos
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: "bad_request"
+            message: "Parâmetro 'year' deve ser numérico."
+            status: 400
+    NotFound:
+      description: Nenhum dado encontrado para a combinação de filtros
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: "not_found"
+            message: "Nenhum registro encontrado para os filtros informados."
+            status: 404
+    InternalError:
+      description: Erro interno do servidor
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: "internal_error"
+            message: "Erro inesperado. Tente novamente."
+            status: 500

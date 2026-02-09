@@ -1,0 +1,36 @@
+# ============================================================
+# SINESP-as-a-Service — Docker Compose
+# ============================================================
+# Uso:
+#   docker compose up          # sobe API
+#   docker compose run refresh # executa refresh manual
+# ============================================================
+
+services:
+  api:
+    build: .
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - snapshot-data:/app/data/snapshots
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/status"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  refresh:
+    build: .
+    command: ["Rscript", "R/refresh.R"]
+    volumes:
+      - snapshot-data:/app/data/snapshots
+    env_file:
+      - .env
+    profiles:
+      - tools
+
+volumes:
+  snapshot-data:
