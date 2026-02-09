@@ -2,8 +2,8 @@
 # SINESP-as-a-Service — Analytics (Trend + Predict)
 # ============================================================
 
-source("R/config.R")
-source("R/logger.R")
+if (!exists("CONFIG"))     try(source("R/config.R"), silent = TRUE)
+if (!exists("LOG_LEVELS")) try(source("R/logger.R"), silent = TRUE)
 
 # ---- Trend ----
 

@@ -11,8 +11,8 @@
 # Idempotente: rodar 2x gera o mesmo resultado (snapshot baseado em hash).
 # ============================================================
 
-source("R/config.R")
-source("R/logger.R")
+if (!exists("CONFIG"))     try(source("R/config.R"), silent = TRUE)
+if (!exists("LOG_LEVELS")) try(source("R/logger.R"), silent = TRUE)
 
 # Verifica dependências essenciais do pipeline
 for (.pkg in c("digest", "jsonlite")) {

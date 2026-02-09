@@ -4,9 +4,9 @@
 
 library(testthat)
 
-source("R/config.R")
-source("R/logger.R")
-source("R/analytics.R")
+source("../R/config.R")
+source("../R/logger.R")
+source("../R/analytics.R")
 
 # ---- Dados de teste — série mensal 3 anos ----
 

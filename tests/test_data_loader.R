@@ -4,10 +4,10 @@
 
 library(testthat)
 
-# Source sem iniciar API
-source("R/config.R")
-source("R/logger.R")
-source("R/data_loader.R")
+# Source sem iniciar API (caminhos relativos a tests/)
+source("../R/config.R")
+source("../R/logger.R")
+source("../R/data_loader.R")
 
 # ---- Dados de teste ----
 

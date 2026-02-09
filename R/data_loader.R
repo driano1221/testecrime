@@ -4,8 +4,8 @@
 # Usado pela API para carregar dados do snapshot mais recente.
 # ============================================================
 
-source("R/config.R")
-source("R/logger.R")
+if (!exists("CONFIG"))     try(source("R/config.R"), silent = TRUE)
+if (!exists("LOG_LEVELS")) try(source("R/logger.R"), silent = TRUE)
 
 # Cache em memória (evita reler disco a cada request)
 .data_cache <- new.env(parent = emptyenv())

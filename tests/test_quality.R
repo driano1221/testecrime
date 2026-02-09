@@ -4,9 +4,9 @@
 
 library(testthat)
 
-source("R/config.R")
-source("R/logger.R")
-source("R/refresh.R")
+source("../R/config.R")
+source("../R/logger.R")
+source("../R/refresh.R")
 
 # ---- Dados de teste ----
 
