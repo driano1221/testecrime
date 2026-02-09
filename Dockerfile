@@ -22,9 +22,7 @@ RUN R -e "install.packages(c( \
   'plumber', \
   'jsonlite', \
   'digest', \
-  'dplyr', \
   'forecast', \
-  'ggplot2', \
   'BrazilCrime' \
 ), repos = 'https://cloud.r-project.org')"
 

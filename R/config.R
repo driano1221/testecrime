@@ -2,6 +2,9 @@
 # SINESP-as-a-Service — Configuração central
 # ============================================================
 
+# Guard: evita re-execução quando sourced múltiplas vezes
+if (exists("CONFIG", envir = globalenv())) return(invisible(NULL))
+
 # Carrega variáveis de ambiente (.env) se disponível
 if (file.exists(".env")) {
   lines <- readLines(".env", warn = FALSE)
@@ -11,7 +14,6 @@ if (file.exists(".env")) {
     if (length(parts) >= 2) {
       key <- trimws(parts[1])
       val <- trimws(paste(parts[-1], collapse = "="))
-      Sys.setenv(val)  # Workaround: usamos do.call abaixo
       do.call(Sys.setenv, setNames(list(val), key))
     }
   }

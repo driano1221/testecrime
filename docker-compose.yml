@@ -14,7 +14,8 @@ services:
     volumes:
       - snapshot-data:/app/data/snapshots
     env_file:
-      - .env
+      - path: .env
+        required: false
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/status"]
@@ -28,7 +29,8 @@ services:
     volumes:
       - snapshot-data:/app/data/snapshots
     env_file:
-      - .env
+      - path: .env
+        required: false
     profiles:
       - tools
 

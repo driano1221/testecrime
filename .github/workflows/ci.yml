@@ -29,9 +29,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-${{ hashFiles('**/DESCRIPTION') }}
+          key: ${{ runner.os }}-r-ci-v1
           restore-keys: |
-            ${{ runner.os }}-r-
+            ${{ runner.os }}-r-ci-
 
       - name: Install dependencies
         run: |
@@ -40,9 +40,7 @@ jobs:
             "plumber",
             "jsonlite",
             "digest",
-            "dplyr",
             "forecast",
-            "ggplot2",
             "lintr"
           ), repos = "https://cloud.r-project.org")'
 

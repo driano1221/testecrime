@@ -14,6 +14,14 @@
 source("R/config.R")
 source("R/logger.R")
 
+# Verifica dependências essenciais do pipeline
+for (.pkg in c("digest", "jsonlite")) {
+  if (!requireNamespace(.pkg, quietly = TRUE)) {
+    stop("Pacote '", .pkg, "' nao esta instalado. Instale com: install.packages('", .pkg, "')")
+  }
+}
+rm(.pkg)
+
 # ---- 1) Coleta de dados ----
 
 #' Baixa dados completos do SINESP VDE via pacote BrazilCrime

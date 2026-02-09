@@ -58,9 +58,10 @@ test_that("filter_data case insensitive para UF", {
 })
 
 test_that("filter_data com granularity year agrega valores", {
+  # SP tem 2 linhas com city/category/typology distintos; agrega por grupo
   result <- filter_data(sample_df, state = "SP", granularity = "year")
-  expect_equal(nrow(result), 1)
-  expect_equal(result$count, 300)
+  expect_equal(nrow(result), 2)
+  expect_equal(sum(result$count), 300)
 })
 
 test_that("filter_data retorna 0 linhas para filtro sem match", {

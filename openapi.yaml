@@ -102,8 +102,8 @@ paths:
       operationId: getPredict
       summary: Previsão (ARIMA automático)
       description: |
-        Executa modelagem ARIMA automática e retorna previsões para h períodos à frente.
-        Utiliza internamente a função `br_crime_predict` do pacote BrazilCrime.
+        Executa modelagem ARIMA automática (via `forecast::auto.arima`) e retorna
+        previsões para h períodos à frente.
       tags: [Analytics]
       parameters:
         - $ref: "#/components/parameters/state"
@@ -231,11 +231,14 @@ components:
               type: array
               items:
                 type: string
-            row_count:
-              type: integer
+        row_count:
+          type: integer
         source:
           type: string
           example: "SINESP VDE — Ministério da Justiça e Segurança Pública"
+        source_url:
+          type: string
+          example: "https://www.gov.br/mj/pt-br/assuntos/sua-seguranca/seguranca-publica/sinesp-1"
         notes:
           type: string
 

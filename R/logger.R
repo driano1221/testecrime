@@ -2,6 +2,9 @@
 # SINESP-as-a-Service — Logger simples
 # ============================================================
 
+# Guard: evita re-execução quando sourced múltiplas vezes
+if (exists("LOG_LEVELS", envir = globalenv())) return(invisible(NULL))
+
 LOG_LEVELS <- c(DEBUG = 1L, INFO = 2L, WARN = 3L, ERROR = 4L)
 
 .current_log_level <- function() {
